@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Building2, Mail, Phone, Lock } from "lucide-react";
-import api from "../Services/api";
+import api from "../services/api";
 
 const Signup = () => {
   const navigate = useNavigate();
