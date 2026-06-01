@@ -60,7 +60,7 @@ const Signup = () => {
 
               <input
                 type="text"
-                placeholder="Shyam Tattoo Studio"
+                placeholder="Your Business Name"
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 className="w-full bg-transparent outline-none p-3 text-white"
@@ -79,7 +79,7 @@ const Signup = () => {
 
               <input
                 type="email"
-                placeholder="example@gmail.com"
+                placeholder="Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-transparent outline-none p-3 text-white"
@@ -98,7 +98,7 @@ const Signup = () => {
 
               <input
                 type="tel"
-                placeholder="+91 9876543210"
+                placeholder="Phone Number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full bg-transparent outline-none p-3 text-white"
@@ -132,7 +132,6 @@ const Signup = () => {
             <p className="text-slate-400 text-sm mb-1">Your Booking Link</p>
 
             <p className="text-indigo-400 break-all">
-              http://localhost:5173/book/
               {slug || "your-business-name"}
             </p>
           </div>

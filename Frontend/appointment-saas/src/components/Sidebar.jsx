@@ -10,7 +10,9 @@ import { CalendarDays } from "lucide-react";
 const Sidebar = () => {
   return (
     <div className="w-64 bg-slate-900 border-r border-slate-800 min-h-screen p-5">
-      <h1 className="text-2xl font-bold text-indigo-500 mb-10">SaaS Booking</h1>
+      <h1 className="text-2xl font-bold text-indigo-500 mb-10">
+        AppointmentPro
+      </h1>
 
       <div className="space-y-3">
         <NavLink
@@ -36,7 +38,7 @@ const Sidebar = () => {
           <CalendarDays size={20} />
           Bookings
         </NavLink>
-        
+
         <NavLink
           to="/customers"
           className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800"

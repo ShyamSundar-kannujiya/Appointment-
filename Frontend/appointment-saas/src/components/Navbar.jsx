@@ -39,7 +39,7 @@ const Navbar = () => {
   return (
     <div className="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center">
       <div>
-        <p className="text-slate-400 text-sm">Your Live Booking Link</p>
+        <p className="text-slate-400 text-sm">Your shop link</p>
 
         <div className="flex items-center gap-3">
           <span className="text-indigo-400">{liveLink}</span>
@@ -51,8 +51,11 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
-          {user?.businessName?.charAt(0)}
+        <div
+          title={user?.businessName} // hover pe poora naam dikhega
+          className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-lg cursor-pointer"
+        >
+          {user?.businessName?.charAt(0)?.toUpperCase()}
         </div>
 
         <button onClick={logout} className="bg-red-600 p-2 rounded-lg">

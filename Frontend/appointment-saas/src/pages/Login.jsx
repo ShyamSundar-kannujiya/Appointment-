@@ -36,7 +36,7 @@ const Login = () => {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4 ">
           <div>
             <label className="text-slate-300 text-sm">Email</label>
 
@@ -47,6 +47,7 @@ const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent focus:outline-none py-3"
               />
             </div>
           </div>
@@ -61,6 +62,7 @@ const Login = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-transparent focus:outline-none py-3"
               />
             </div>
           </div>
