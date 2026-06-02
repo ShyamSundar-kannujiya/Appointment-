@@ -34,20 +34,17 @@ const Dashboard = () => {
  };
 
   return (
-    <div className="flex bg-slate-950 min-h-screen text-white">
+    <div className="flex bg-slate-950 min-h-screen text-white overflow-hidden">
       <Sidebar />
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 w-full">
         <Navbar />
 
-        <div className="p-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="p-4 md:p-6 pt-20 md:pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <StatCard title="Today's Bookings" value={stats.todayBookings} />
-
             <StatCard title="Pending Approval" value={stats.pendingBookings} />
-
             <StatCard title="Confirmed" value={stats.confirmedBookings} />
-
             <StatCard title="Revenue" value={`₹${stats.estimatedRevenue}`} />
           </div>
 
