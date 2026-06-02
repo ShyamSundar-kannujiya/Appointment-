@@ -14,6 +14,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import publicRoutes from "./routes/publicRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
 
+
 const app = express();
 
 /* Middleware */
@@ -35,6 +36,7 @@ app.use("/bookings", bookingRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/customers", customerRoutes);
 app.use("/", publicRoutes);
+
 
 /* Home Route */
 app.get("/", (req, res) => {

@@ -22,7 +22,7 @@ const Navbar = () => {
     }
   };
 
-  const liveLink = user ? `http://localhost:5173/book/${user.slug}` : "";
+ const liveLink = user ? `${window.location.origin}/book/${user.slug}` : "";
 
   const copyLink = () => {
     navigator.clipboard.writeText(liveLink);
