@@ -9,6 +9,7 @@ import Customers from "./pages/Customers";
 import Settings from "./pages/Settings";
 import Bookings from "./pages/Bookings";
 import OwnerProfile from "./pages/OwnerProfile";
+import UserGuide from "./pages/UserGuide";
 
 function App() {
   return (
@@ -28,8 +29,12 @@ function App() {
       <Route path="/settings" element={<Settings />} />
 
       <Route path="/bookings" element={<Bookings />} />
-      
+
       <Route path="/owner-profile" element={<OwnerProfile />} />
+
+      <Route path="/guide" element={<UserGuide publicMode />} />
+
+      <Route path="/user-guide" element={<UserGuide />} />
     </Routes>
   );
 }

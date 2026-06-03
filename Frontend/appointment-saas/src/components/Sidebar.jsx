@@ -11,6 +11,7 @@ import {
   Copy,
   LogOut,
   User,
+  BookOpen,
 } from "lucide-react";
 import { useNavbarData } from "./Navbar";
 
@@ -21,6 +22,7 @@ const navItems = [
   { to: "/customers", icon: Users, label: "Customers" },
   { to: "/settings", icon: Settings, label: "Settings" },
   { to: "/owner-profile", icon: User, label: "Owner Profile" },
+  { to: "/user-guide", icon: BookOpen, label: "User Guide" },
 ];
 
 const Sidebar = () => {

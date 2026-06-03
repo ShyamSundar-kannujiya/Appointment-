@@ -81,6 +81,12 @@ const Login = () => {
             Sign Up
           </Link>
         </p>
+        <Link
+          to="/guide"
+          className="block text-center mt-4 text-indigo-400 hover:text-indigo-300"
+        >
+          How to use AppointmentPro?
+        </Link>
       </div>
     </div>
   );
