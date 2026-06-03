@@ -8,6 +8,7 @@ import ClientBook from "./pages/ClientBook";
 import Customers from "./pages/Customers";
 import Settings from "./pages/Settings";
 import Bookings from "./pages/Bookings";
+import OwnerProfile from "./pages/OwnerProfile";
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
       <Route path="/settings" element={<Settings />} />
 
       <Route path="/bookings" element={<Bookings />} />
+      
+      <Route path="/owner-profile" element={<OwnerProfile />} />
     </Routes>
   );
 }

@@ -51,6 +51,7 @@ export const createBooking = async (req, res) => {
       bookingDate,
       slotTime,
       status: "pending",
+      paymentStatus: shop.advanceAmount > 0 ? "pending" : "verified",
     });
 
     if (
@@ -78,7 +79,7 @@ Thank you.`,
 
     res.status(201).json({
       success: true,
-      message: "Booking created successfully",
+      message: "Booking request created. Please pay advance and submit UTR/Transaction ID.",
       booking,
     });
   } catch (error) {
@@ -184,13 +185,13 @@ export const updateBookingStatus = async (req, res) => {
           booking.clientPhone,
           `✅ Hello ${booking.clientName}
 
-Your appointment has been CONFIRMED.
+          Your appointment has been CONFIRMED.
 
-Service: ${booking.serviceId?.serviceName || "Service"}
-Date: ${new Date(booking.bookingDate).toLocaleDateString()}
-Time: ${booking.slotTime}
+          Service: ${booking.serviceId?.serviceName || "Service"}
+          Date: ${new Date(booking.bookingDate).toLocaleDateString()}
+          Time: ${booking.slotTime}
 
-See you soon.`,
+          See you soon.`,
         );
       }
 
@@ -201,15 +202,15 @@ See you soon.`,
           booking.clientPhone,
           `❌ Hello ${booking.clientName}
 
-Your appointment has been CANCELLED.
+          Your appointment has been CANCELLED.
 
-Service: ${booking.serviceId?.serviceName || "Service"}
-Date: ${new Date(booking.bookingDate).toLocaleDateString()}
-Time: ${booking.slotTime}
+          Service: ${booking.serviceId?.serviceName || "Service"}
+          Date: ${new Date(booking.bookingDate).toLocaleDateString()}
+          Time: ${booking.slotTime}
 
-Please book another slot.
+          Please book another slot.
 
-Thank you.`,
+          Thank you.`,
         );
       }
     }
@@ -242,11 +243,83 @@ export const deleteBooking = async (req, res) => {
       });
     }
 
+      if (status === "confirmed" && booking.paymentStatus !== "verified") {
+        return res.status(400).json({
+          success: false,
+          message: "Payment must be verified before confirming booking",
+        });
+      }
     await booking.deleteOne();
 
     res.status(200).json({
       success: true,
       message: "Booking deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* SUBMIT PAYMENT PROOF */
+export const submitPaymentProof = async (req, res) => {
+  try {
+    const { bookingId, utrNumber } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    booking.utrNumber = utrNumber;
+    booking.paymentStatus = "submitted";
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment proof submitted",
+      booking,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/* UPDATE PAYMENT STATUS */
+export const updatePaymentStatus = async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      shopId: req.user._id,
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    booking.paymentStatus = paymentStatus;
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment status updated",
+      booking,
     });
   } catch (error) {
     res.status(500).json({

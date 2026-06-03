@@ -26,7 +26,12 @@ const ClientBook = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
+  const [bookingId, setBookingId] = useState("");
+  const [utrNumber, setUtrNumber] = useState("");
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false);
+
   const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     fetchShop();
@@ -53,6 +58,24 @@ const ClientBook = () => {
     }
   };
 
+  const submitPaymentProof = async () => {
+    try {
+      if (!utrNumber) {
+        return alert("Please enter UTR / Transaction ID");
+      }
+
+      await api.post("/bookings/payment-proof", {
+        bookingId,
+        utrNumber,
+      });
+
+      setPaymentSubmitted(true);
+      alert("Payment proof submitted successfully");
+    } catch (error) {
+      alert(error.response?.data?.message || "Payment proof submit failed");
+    }
+  };
+
   const handleBooking = async () => {
     try {
       if (
@@ -76,6 +99,7 @@ const ClientBook = () => {
         slotTime: selectedSlot,
       });
 
+      setBookingId(res.data.booking._id);
       alert(res.data.message);
 
       setSelectedService(null);
@@ -193,6 +217,41 @@ const ClientBook = () => {
                 {loading ? "Booking..." : "Confirm Appointment"}
               </button>
             </div>
+          </div>
+        )}
+
+        {bookingId && shop?.advanceAmount > 0 && (
+          <div className="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 className="text-xl font-semibold mb-3">Pay Advance</h2>
+
+            <p className="text-slate-300">Amount: ₹{shop.advanceAmount}</p>
+
+            <p className="text-slate-300 mt-2">
+              UPI ID: <span className="text-indigo-400">{shop.upiId}</span>
+            </p>
+
+            <button
+              onClick={() => navigator.clipboard.writeText(shop.upiId)}
+              className="mt-3 bg-slate-800 px-4 py-2 rounded-lg"
+            >
+              Copy UPI ID
+            </button>
+
+            <input
+              type="text"
+              placeholder="Enter UTR / Transaction ID"
+              value={utrNumber}
+              onChange={(e) => setUtrNumber(e.target.value)}
+              className="w-full mt-4 bg-slate-800 p-3 rounded-xl outline-none"
+            />
+
+            <button
+              onClick={submitPaymentProof}
+              disabled={paymentSubmitted}
+              className="w-full mt-4 bg-green-600 hover:bg-green-700 py-3 rounded-xl disabled:opacity-50"
+            >
+              {paymentSubmitted ? "Submitted" : "Submit Payment Proof"}
+            </button>
           </div>
         )}
       </div>

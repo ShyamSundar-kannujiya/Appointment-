@@ -39,6 +39,16 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    upiId: {
+      type: String,
+      default: "",
+    },
+
+    advanceAmount: {
+      type: Number,
+      default: 0,
+    },
+
     whatsappToken: String,
 
     whatsappPhoneNumberId: String,

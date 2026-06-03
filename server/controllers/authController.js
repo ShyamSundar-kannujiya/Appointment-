@@ -140,7 +140,7 @@ export const getCurrentUser = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { businessName, phone } = req.body;
+    const { businessName, phone, upiId, advanceAmount } = req.body;
 
     const user = await User.findById(req.user._id);
 
@@ -151,11 +151,10 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    user.businessName =
-      businessName || user.businessName;
-
-    user.phone =
-      phone || user.phone;
+    user.businessName = businessName || user.businessName;
+    user.phone = phone || user.phone;
+    user.upiId = upiId || user.upiId;
+    user.advanceAmount = advanceAmount ?? user.advanceAmount;
 
     await user.save();
 

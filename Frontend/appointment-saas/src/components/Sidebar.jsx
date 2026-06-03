@@ -10,6 +10,7 @@ import {
   X,
   Copy,
   LogOut,
+  User,
 } from "lucide-react";
 import { useNavbarData } from "./Navbar";
 
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/bookings", icon: CalendarDays, label: "Bookings" },
   { to: "/customers", icon: Users, label: "Customers" },
   { to: "/settings", icon: Settings, label: "Settings" },
+  { to: "/owner-profile", icon: User, label: "Owner Profile" },
 ];
 
 const Sidebar = () => {
@@ -140,5 +142,7 @@ const Sidebar = () => {
     </>
   );
 };
+
+
 
 export default Sidebar;
