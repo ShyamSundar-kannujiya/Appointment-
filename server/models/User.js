@@ -33,6 +33,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    whatsappConnected: {
+      type: Boolean,
+      default: false,
+    },
+
+    whatsappToken: String,
+
+    whatsappPhoneNumberId: String,
+
+    whatsappBusinessAccountId: String,
   },
   {
     timestamps: true,

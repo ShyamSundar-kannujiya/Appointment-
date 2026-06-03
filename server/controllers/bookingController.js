@@ -1,17 +1,14 @@
 import Booking from "../models/Booking.js";
 import Service from "../models/Service.js";
 import User from "../models/User.js";
+import { sendWhatsAppMessage } from "../utils/sendWhatsApp.js";
 
-/* ==========================================
-   PUBLIC BOOKING
-========================================== */
-
+/* PUBLIC BOOKING */
 export const createBooking = async (req, res) => {
   try {
     const { slug, serviceId, clientName, clientPhone, bookingDate, slotTime } =
       req.body;
 
-    // Find Shop By Slug
     const shop = await User.findOne({ slug });
 
     if (!shop) {
@@ -21,7 +18,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // Check Service
     const service = await Service.findById(serviceId);
 
     if (!service) {
@@ -31,7 +27,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // Check Slot Availability
     const existingBooking = await Booking.findOne({
       shopId: shop._id,
       bookingDate,
@@ -48,7 +43,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // Create Booking
     const booking = await Booking.create({
       shopId: shop._id,
       serviceId,
@@ -58,6 +52,29 @@ export const createBooking = async (req, res) => {
       slotTime,
       status: "pending",
     });
+
+    if (
+      shop.whatsappConnected &&
+      shop.whatsappToken &&
+      shop.whatsappPhoneNumberId
+    ) {
+      await sendWhatsAppMessage(
+        shop.whatsappToken,
+        shop.whatsappPhoneNumberId,
+        clientPhone,
+        `Hello ${clientName}
+
+Your appointment request has been received.
+
+Service: ${service.serviceName}
+Date: ${bookingDate}
+Time: ${slotTime}
+
+We will confirm shortly.
+
+Thank you.`,
+      );
+    }
 
     res.status(201).json({
       success: true,
@@ -72,10 +89,7 @@ export const createBooking = async (req, res) => {
   }
 };
 
-/* ==========================================
-   OWNER BOOKINGS
-========================================== */
-
+/* OWNER BOOKINGS */
 export const getBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({
@@ -99,10 +113,7 @@ export const getBookings = async (req, res) => {
   }
 };
 
-/* ==========================================
-   SINGLE BOOKING
-========================================== */
-
+/* SINGLE BOOKING */
 export const getBookingById = async (req, res) => {
   try {
     const booking = await Booking.findOne({
@@ -129,18 +140,24 @@ export const getBookingById = async (req, res) => {
   }
 };
 
-/* ==========================================
-   UPDATE STATUS
-========================================== */
-
+/* UPDATE BOOKING STATUS */
 export const updateBookingStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
+    const allowedStatus = ["pending", "confirmed", "cancelled"];
+
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid booking status",
+      });
+    }
+
     const booking = await Booking.findOne({
       _id: req.params.id,
       shopId: req.user._id,
-    });
+    }).populate("serviceId");
 
     if (!booking) {
       return res.status(404).json({
@@ -152,6 +169,50 @@ export const updateBookingStatus = async (req, res) => {
     booking.status = status;
 
     await booking.save();
+
+    const shop = await User.findById(booking.shopId);
+
+    if (
+      shop?.whatsappConnected &&
+      shop?.whatsappToken &&
+      shop?.whatsappPhoneNumberId
+    ) {
+      if (status === "confirmed") {
+        await sendWhatsAppMessage(
+          shop.whatsappToken,
+          shop.whatsappPhoneNumberId,
+          booking.clientPhone,
+          `✅ Hello ${booking.clientName}
+
+Your appointment has been CONFIRMED.
+
+Service: ${booking.serviceId?.serviceName || "Service"}
+Date: ${new Date(booking.bookingDate).toLocaleDateString()}
+Time: ${booking.slotTime}
+
+See you soon.`,
+        );
+      }
+
+      if (status === "cancelled") {
+        await sendWhatsAppMessage(
+          shop.whatsappToken,
+          shop.whatsappPhoneNumberId,
+          booking.clientPhone,
+          `❌ Hello ${booking.clientName}
+
+Your appointment has been CANCELLED.
+
+Service: ${booking.serviceId?.serviceName || "Service"}
+Date: ${new Date(booking.bookingDate).toLocaleDateString()}
+Time: ${booking.slotTime}
+
+Please book another slot.
+
+Thank you.`,
+        );
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -166,10 +227,7 @@ export const updateBookingStatus = async (req, res) => {
   }
 };
 
-/* ==========================================
-   DELETE BOOKING
-========================================== */
-
+/* DELETE BOOKING */
 export const deleteBooking = async (req, res) => {
   try {
     const booking = await Booking.findOne({

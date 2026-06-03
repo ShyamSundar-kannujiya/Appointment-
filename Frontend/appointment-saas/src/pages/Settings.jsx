@@ -6,6 +6,19 @@ const Settings = () => {
   const [phone, setPhone] = useState("");
   const [saved, setSaved] = useState(false);
 
+   const connectWhatsApp = () => {
+     const token = localStorage.getItem("token");
+
+     if (!token) {
+       alert("Please login first");
+       return;
+     }
+
+     window.location.href = `${
+       import.meta.env.VITE_API_URL
+     }/whatsapp/connect?token=${token}`;
+   };
+
   const handleSave = async () => {
     try {
       await api.put("/auth/profile", {
@@ -50,6 +63,12 @@ const Settings = () => {
           Save Changes
         </button>
 
+        <button
+          onClick={connectWhatsApp}
+          className="mt-4 bg-green-600 px-5 py-3 rounded-xl hover:bg-green-700"
+        >
+          Connect WhatsApp Business
+        </button>
         {saved && (
           <p className="mt-3 text-green-400">
             ✅ Settings updated successfully
