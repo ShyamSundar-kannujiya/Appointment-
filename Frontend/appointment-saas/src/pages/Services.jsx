@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import api from "../services/api";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 
 const Services = () => {
   const [categoryName, setCategoryName] = useState("");
@@ -77,133 +79,142 @@ const Services = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Manage Services</h1>
+    <div className="flex min-h-screen bg-slate-950 text-white">
+      <Sidebar />
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-6">Add New Service</h2>
+      <div className="flex-1 min-w-0">
+        <Navbar />
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Category"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              className="bg-slate-800 p-3 rounded-xl outline-none"
-            />
+        <main className="p-6 md:p-8 pt-20 md:pt-8 max-w-7xl mx-auto w-full">
+          <h1 className="text-3xl font-bold mb-8">Manage Services</h1>
 
-            <input
-              type="text"
-              placeholder="Service Name"
-              value={serviceName}
-              onChange={(e) => setServiceName(e.target.value)}
-              className="bg-slate-800 p-3 rounded-xl outline-none"
-            />
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-6">Add New Service</h2>
 
-            <input
-              type="number"
-              placeholder="Price"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="bg-slate-800 p-3 rounded-xl outline-none"
-            />
-
-            <input
-              type="number"
-              placeholder="Duration in minutes"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="bg-slate-800 p-3 rounded-xl outline-none"
-            />
-          </div>
-
-          <div className="mt-5 bg-slate-800 border border-slate-700 rounded-xl p-4">
-            <label className="flex items-center gap-3 cursor-pointer">
+            <div className="grid md:grid-cols-2 gap-4">
               <input
-                type="checkbox"
-                checked={advancePaymentEnabled}
-                onChange={(e) => {
-                  setAdvancePaymentEnabled(e.target.checked);
-                  if (!e.target.checked) {
-                    setAdvanceAmount("");
-                  }
-                }}
-                className="w-5 h-5"
+                type="text"
+                placeholder="Category"
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+                className="bg-slate-800 p-3 rounded-xl outline-none"
               />
 
-              <span className="font-medium">
-                Enable Advance Payment for this service
-              </span>
-            </label>
+              <input
+                type="text"
+                placeholder="Service Name"
+                value={serviceName}
+                onChange={(e) => setServiceName(e.target.value)}
+                className="bg-slate-800 p-3 rounded-xl outline-none"
+              />
 
-            {advancePaymentEnabled && (
               <input
                 type="number"
-                placeholder="Advance Amount"
-                value={advanceAmount}
-                onChange={(e) => setAdvanceAmount(e.target.value)}
-                className="mt-4 w-full bg-slate-900 p-3 rounded-xl outline-none"
+                placeholder="Price"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="bg-slate-800 p-3 rounded-xl outline-none"
               />
-            )}
+
+              <input
+                type="number"
+                placeholder="Duration in minutes"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="bg-slate-800 p-3 rounded-xl outline-none"
+              />
+            </div>
+
+            <div className="mt-5 bg-slate-800 border border-slate-700 rounded-xl p-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={advancePaymentEnabled}
+                  onChange={(e) => {
+                    setAdvancePaymentEnabled(e.target.checked);
+                    if (!e.target.checked) {
+                      setAdvanceAmount("");
+                    }
+                  }}
+                  className="w-5 h-5"
+                />
+
+                <span className="font-medium">
+                  Enable Advance Payment for this service
+                </span>
+              </label>
+
+              {advancePaymentEnabled && (
+                <input
+                  type="number"
+                  placeholder="Advance Amount"
+                  value={advanceAmount}
+                  onChange={(e) => setAdvanceAmount(e.target.value)}
+                  className="mt-4 w-full bg-slate-900 p-3 rounded-xl outline-none"
+                />
+              )}
+            </div>
+
+            <button
+              onClick={addService}
+              disabled={loading}
+              className="mt-5 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-5 py-3 rounded-xl disabled:opacity-50"
+            >
+              <Plus size={18} />
+              {loading ? "Adding..." : "Add Service"}
+            </button>
           </div>
 
-          <button
-            onClick={addService}
-            disabled={loading}
-            className="mt-5 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-5 py-3 rounded-xl disabled:opacity-50"
-          >
-            <Plus size={18} />
-            {loading ? "Adding..." : "Add Service"}
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service) => (
-            <div
-              key={service._id}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-5"
-            >
-              <span className="text-xs bg-indigo-600 px-3 py-1 rounded-full">
-                {service.categoryName}
-              </span>
-
-              <h3 className="text-xl font-semibold mt-4">
-                {service.serviceName}
-              </h3>
-
-              <div className="mt-5 space-y-2">
-                <p className="text-slate-300">
-                  Price :
-                  <span className="text-green-400 ml-2">₹{service.price}</span>
-                </p>
-
-                <p className="text-slate-300">
-                  Duration :<span className="ml-2">{service.duration} min</span>
-                </p>
-
-                <p className="text-slate-300">
-                  Advance Payment :
-                  {service.advancePaymentEnabled ? (
-                    <span className="text-green-400 ml-2">
-                      ₹{service.advanceAmount}
-                    </span>
-                  ) : (
-                    <span className="text-red-400 ml-2">Disabled</span>
-                  )}
-                </p>
-              </div>
-
-              <button
-                onClick={() => deleteService(service._id)}
-                className="mt-6 flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700"
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((service) => (
+              <div
+                key={service._id}
+                className="bg-slate-900 border border-slate-800 rounded-2xl p-5"
               >
-                <Trash2 size={16} />
-                Delete
-              </button>
-            </div>
-          ))}
-        </div>
+                <span className="text-xs bg-indigo-600 px-3 py-1 rounded-full">
+                  {service.categoryName}
+                </span>
+
+                <h3 className="text-xl font-semibold mt-4">
+                  {service.serviceName}
+                </h3>
+
+                <div className="mt-5 space-y-2">
+                  <p className="text-slate-300">
+                    Price :
+                    <span className="text-green-400 ml-2">
+                      ₹{service.price}
+                    </span>
+                  </p>
+
+                  <p className="text-slate-300">
+                    Duration :
+                    <span className="ml-2">{service.duration} min</span>
+                  </p>
+
+                  <p className="text-slate-300">
+                    Advance Payment :
+                    {service.advancePaymentEnabled ? (
+                      <span className="text-green-400 ml-2">
+                        ₹{service.advanceAmount}
+                      </span>
+                    ) : (
+                      <span className="text-red-400 ml-2">Disabled</span>
+                    )}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => deleteService(service._id)}
+                  className="mt-6 flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700"
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     </div>
   );

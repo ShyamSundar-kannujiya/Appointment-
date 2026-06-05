@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Scissors,
   Users,
-  Settings,
   CalendarDays,
   Menu,
   X,
@@ -20,7 +19,6 @@ const navItems = [
   { to: "/services", icon: Scissors, label: "Services" },
   { to: "/bookings", icon: CalendarDays, label: "Bookings" },
   { to: "/customers", icon: Users, label: "Customers" },
-  { to: "/settings", icon: Settings, label: "Settings" },
   { to: "/owner-profile", icon: User, label: "Owner Profile" },
   { to: "/user-guide", icon: BookOpen, label: "User Guide" },
 ];

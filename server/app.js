@@ -13,7 +13,6 @@ import bookingRoutes from "./routes/bookingRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import publicRoutes from "./routes/publicRoutes.js";
 import customerRoutes from "./routes/customerRoutes.js";
-import testRoutes from "./routes/testRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
 
 const app = express();
@@ -37,7 +36,6 @@ app.use("/bookings", bookingRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/customers", customerRoutes);
 app.use("/", publicRoutes);
-app.use("/", testRoutes);
 app.use("/whatsapp", whatsappRoutes);
 
 

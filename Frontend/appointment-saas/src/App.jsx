@@ -6,7 +6,6 @@ import Dashboard from "./pages/Dashboard";
 import Services from "./pages/Services";
 import ClientBook from "./pages/ClientBook";
 import Customers from "./pages/Customers";
-import Settings from "./pages/Settings";
 import Bookings from "./pages/Bookings";
 import OwnerProfile from "./pages/OwnerProfile";
 import UserGuide from "./pages/UserGuide";
@@ -25,8 +24,6 @@ function App() {
       <Route path="/book/:slug" element={<ClientBook />} />
 
       <Route path="/customers" element={<Customers />} />
-
-      <Route path="/settings" element={<Settings />} />
 
       <Route path="/bookings" element={<Bookings />} />
 
