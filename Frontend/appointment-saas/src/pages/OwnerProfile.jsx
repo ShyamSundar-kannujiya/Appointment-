@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, Save, CheckCircle, XCircle } from "lucide-react";
+import { Copy, Save, CheckCircle } from "lucide-react";
 import api from "../services/api";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -15,10 +15,56 @@ const OwnerProfile = () => {
   const [upiId, setUpiId] = useState("");
   const [advanceAmount, setAdvanceAmount] = useState(0);
 
+  const [whatsappConfig, setWhatsappConfig] = useState(null);
+  const [signupData, setSignupData] = useState({
+    wabaId: "",
+    phoneNumberId: "",
+  });
+
   const bookingLink = `${window.location.origin}/book/${slug}`;
 
   useEffect(() => {
     fetchProfile();
+    fetchWhatsAppConfig();
+  }, []);
+
+  useEffect(() => {
+    if (whatsappConfig?.appId) {
+      loadFacebookSDK();
+    }
+  }, [whatsappConfig]);
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (
+        event.origin !== "https://www.facebook.com" &&
+        event.origin !== "https://web.facebook.com"
+      ) {
+        return;
+      }
+
+      try {
+        const data =
+          typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+
+        if (data?.type === "WA_EMBEDDED_SIGNUP") {
+          if (data.event === "FINISH") {
+            setSignupData({
+              wabaId: data.data?.waba_id || "",
+              phoneNumberId: data.data?.phone_number_id || "",
+            });
+
+            console.log("WhatsApp Signup Data:", data.data);
+          }
+        }
+      } catch (error) {
+        console.log("WhatsApp message parse error:", error);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   const fetchProfile = async () => {
@@ -35,6 +81,33 @@ const OwnerProfile = () => {
       setAdvanceAmount(user.advanceAmount || 0);
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const fetchWhatsAppConfig = async () => {
+    try {
+      const res = await api.get("/whatsapp/config");
+      setWhatsappConfig(res.data);
+    } catch (error) {
+      console.log("WhatsApp config error:", error);
+    }
+  };
+
+  const loadFacebookSDK = () => {
+    window.fbAsyncInit = function () {
+      window.FB.init({
+        appId: whatsappConfig.appId,
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: "v23.0",
+      });
+    };
+
+    if (!document.getElementById("facebook-jssdk")) {
+      const script = document.createElement("script");
+      script.id = "facebook-jssdk";
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      document.body.appendChild(script);
     }
   };
 
@@ -64,16 +137,64 @@ const OwnerProfile = () => {
   };
 
   const connectWhatsApp = () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("Please login first");
+    if (!window.FB) {
+      alert("Facebook SDK not loaded. Please refresh page.");
       return;
     }
 
-    window.location.href = `${
-      import.meta.env.VITE_API_URL
-    }/whatsapp/connect?token=${token}`;
+    if (!whatsappConfig?.configId) {
+      alert("WhatsApp config ID missing");
+      return;
+    }
+
+    window.FB.login(
+      async (response) => {
+        try {
+          console.log("FB Login Response:", response);
+
+          const code = response.authResponse?.code;
+
+          if (!code) {
+            alert("WhatsApp connection cancelled");
+            return;
+          }
+
+          setTimeout(async () => {
+            const wabaId = signupData.wabaId;
+            const phoneNumberId = signupData.phoneNumberId;
+
+            if (!wabaId || !phoneNumberId) {
+              alert("WABA ID or Phone Number ID missing. Check console.");
+              console.log("Signup Data Missing:", signupData);
+              return;
+            }
+
+            const res = await api.post("/whatsapp/exchange-code", {
+              code,
+              wabaId,
+              phoneNumberId,
+            });
+
+            if (res.data.success) {
+              alert("WhatsApp connected successfully");
+              setWhatsappConnected(true);
+              fetchProfile();
+            }
+          }, 1000);
+        } catch (error) {
+          console.log("WhatsApp connect error:", error);
+          alert(error.response?.data?.message || "WhatsApp connection failed");
+        }
+      },
+      {
+        config_id: whatsappConfig.configId,
+        response_type: "code",
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+        },
+      },
+    );
   };
 
   return (

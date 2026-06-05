@@ -1,15 +1,13 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import {
-  connectWhatsApp,
-  whatsappCallback,
+  exchangeWhatsAppCode,
+  getWhatsAppConfig,
 } from "../controllers/whatsappController.js";
-
 
 const router = express.Router();
 
-router.get("/connect", protect, connectWhatsApp);
-
-router.get("/callback", whatsappCallback);
+router.get("/config", protect, getWhatsAppConfig);
+router.post("/exchange-code", protect, exchangeWhatsAppCode);
 
 export default router;

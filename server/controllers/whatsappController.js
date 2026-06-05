@@ -2,50 +2,27 @@ import axios from "axios";
 import User from "../models/User.js";
 
 /* ==========================
-   CONNECT WHATSAPP
+   GET WHATSAPP CONFIG
 ========================== */
-
-export const connectWhatsApp = async (req, res) => {
-  try {
-    const redirectUri = process.env.WHATSAPP_REDIRECT_URI;
-
-    const state = req.user._id.toString();
-
-    const url =
-      `https://www.facebook.com/v23.0/dialog/oauth` +
-      `?client_id=${process.env.FACEBOOK_APP_ID}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&state=${state}` +
-      `&scope=business_management,whatsapp_business_management,whatsapp_business_messaging`;
-
-    res.redirect(url);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+export const getWhatsAppConfig = async (req, res) => {
+  res.json({
+    success: true,
+    appId: process.env.FACEBOOK_APP_ID,
+    configId: process.env.WHATSAPP_CONFIG_ID,
+  });
 };
 
 /* ==========================
-   WHATSAPP CALLBACK
+   EXCHANGE EMBEDDED SIGNUP CODE
 ========================== */
-
-export const whatsappCallback = async (req, res) => {
+export const exchangeWhatsAppCode = async (req, res) => {
   try {
-    const { code, state } = req.query;
+    const { code, wabaId, phoneNumberId } = req.body;
 
-    if (!code) {
+    if (!code || !wabaId || !phoneNumberId) {
       return res.status(400).json({
         success: false,
-        message: "Authorization code missing",
-      });
-    }
-
-    if (!state) {
-      return res.status(400).json({
-        success: false,
-        message: "User state missing",
+        message: "code, wabaId and phoneNumberId are required",
       });
     }
 
@@ -55,7 +32,6 @@ export const whatsappCallback = async (req, res) => {
         params: {
           client_id: process.env.FACEBOOK_APP_ID,
           client_secret: process.env.FACEBOOK_APP_SECRET,
-          redirect_uri: process.env.WHATSAPP_REDIRECT_URI,
           code,
         },
       },
@@ -63,88 +39,20 @@ export const whatsappCallback = async (req, res) => {
 
     const accessToken = tokenRes.data.access_token;
 
-    const businessRes = await axios.get(
-      "https://graph.facebook.com/v23.0/me/businesses",
-      {
-        params: {
-          access_token: accessToken,
-        },
-      },
-    );
-
-    const businessId = businessRes.data?.data?.[0]?.id;
-
-    if (!businessId) {
-      return res.status(400).json({
-        success: false,
-        message: "No business account found",
-        data: businessRes.data,
-      });
-    }
-
-    const wabaRes = await axios.get(
-      `https://graph.facebook.com/v23.0/${businessId}/owned_whatsapp_business_accounts`,
-      {
-        params: {
-          access_token: accessToken,
-        },
-      },
-    );
-
-    const wabaList = wabaRes.data?.data || [];
-
-    if (wabaList.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No WhatsApp Business Account found",
-        data: wabaRes.data,
-      });
-    }
-
-    let whatsappBusinessAccountId = null;
-    let whatsappPhoneNumberId = null;
-
-    for (const waba of wabaList) {
-      const phoneRes = await axios.get(
-        `https://graph.facebook.com/v23.0/${waba.id}/phone_numbers`,
-        {
-          params: {
-            access_token: accessToken,
-          },
-        },
-      );
-
-      const phone = phoneRes.data?.data?.[0];
-
-      if (phone?.id) {
-        whatsappBusinessAccountId = waba.id;
-        whatsappPhoneNumberId = phone.id;
-        break;
-      }
-    }
-
-    if (!whatsappBusinessAccountId || !whatsappPhoneNumberId) {
-      return res.status(400).json({
-        success: false,
-        message: "No WhatsApp phone number found",
-        data: wabaRes.data,
-      });
-    }
-
-    await User.findByIdAndUpdate(state, {
+    await User.findByIdAndUpdate(req.user._id, {
       whatsappConnected: true,
       whatsappToken: accessToken,
-      whatsappPhoneNumberId,
-      whatsappBusinessAccountId,
+      whatsappBusinessAccountId: wabaId,
+      whatsappPhoneNumberId: phoneNumberId,
     });
 
-    res.send(`
-      <h2>WhatsApp Connected Successfully ✅</h2>
-      <p>You can close this tab and return to dashboard.</p>
-    `);
+    res.json({
+      success: true,
+      message: "WhatsApp connected successfully",
+    });
   } catch (error) {
     console.log(
-      "WhatsApp Callback Error:",
+      "WhatsApp Exchange Error:",
       error.response?.data || error.message,
     );
 
