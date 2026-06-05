@@ -207,7 +207,6 @@ const OwnerProfile = () => {
       },
     );
   };
-
   return (
     <div className="flex bg-slate-950 min-h-screen text-white">
       <Sidebar />

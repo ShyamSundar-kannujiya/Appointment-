@@ -46,6 +46,16 @@ const bookingSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    advanceAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    totalAmount: {
+      type: Number,
+      default: 0,
+    },
+
     utrNumber: {
       type: String,
       default: "",

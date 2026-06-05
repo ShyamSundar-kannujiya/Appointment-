@@ -3,7 +3,14 @@ import Service from "../models/Service.js";
 /* Create Service */
 export const createService = async (req, res) => {
   try {
-    const { categoryName, serviceName, price, duration } = req.body;
+    const {
+      categoryName,
+      serviceName,
+      price,
+      duration,
+      advancePaymentEnabled,
+      advanceAmount,
+    } = req.body;
 
     const service = await Service.create({
       shopId: req.user._id,
@@ -11,6 +18,8 @@ export const createService = async (req, res) => {
       serviceName,
       price,
       duration,
+      advancePaymentEnabled: advancePaymentEnabled || false,
+      advanceAmount: advancePaymentEnabled ? Number(advanceAmount || 0) : 0,
     });
 
     res.status(201).json({
@@ -61,9 +70,16 @@ export const updateService = async (req, res) => {
       });
     }
 
+    const updateData = {
+      ...req.body,
+      advanceAmount: req.body.advancePaymentEnabled
+        ? Number(req.body.advanceAmount || 0)
+        : 0,
+    };
+
     const updatedService = await Service.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       {
         new: true,
       },

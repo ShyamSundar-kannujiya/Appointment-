@@ -18,7 +18,10 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    const service = await Service.findById(serviceId);
+    const service = await Service.findOne({
+      _id: serviceId,
+      shopId: shop._id,
+    });
 
     if (!service) {
       return res.status(404).json({
@@ -31,9 +34,7 @@ export const createBooking = async (req, res) => {
       shopId: shop._id,
       bookingDate,
       slotTime,
-      status: {
-        $ne: "cancelled",
-      },
+      status: { $ne: "cancelled" },
     });
 
     if (existingBooking) {
@@ -43,6 +44,9 @@ export const createBooking = async (req, res) => {
       });
     }
 
+    const advanceRequired =
+      service.advancePaymentEnabled && Number(service.advanceAmount || 0) > 0;
+
     const booking = await Booking.create({
       shopId: shop._id,
       serviceId,
@@ -51,7 +55,10 @@ export const createBooking = async (req, res) => {
       bookingDate,
       slotTime,
       status: "pending",
-      paymentStatus: shop.advanceAmount > 0 ? "pending" : "verified",
+
+      paymentStatus: advanceRequired ? "pending" : "verified",
+      advanceAmount: advanceRequired ? Number(service.advanceAmount) : 0,
+      totalAmount: Number(service.price),
     });
 
     if (
@@ -70,6 +77,11 @@ Your appointment request has been received.
 Service: ${service.serviceName}
 Date: ${bookingDate}
 Time: ${slotTime}
+${
+  advanceRequired
+    ? `Advance Payment: ₹${service.advanceAmount}`
+    : "No advance payment required"
+}
 
 We will confirm shortly.
 
@@ -79,7 +91,9 @@ Thank you.`,
 
     res.status(201).json({
       success: true,
-      message: "Booking request created. Please pay advance and submit UTR/Transaction ID.",
+      message: advanceRequired
+        ? "Booking request created. Please pay advance and submit UTR/Transaction ID."
+        : "Booking request created successfully.",
       booking,
     });
   } catch (error) {
@@ -243,12 +257,6 @@ export const deleteBooking = async (req, res) => {
       });
     }
 
-      if (status === "confirmed" && booking.paymentStatus !== "verified") {
-        return res.status(400).json({
-          success: false,
-          message: "Payment must be verified before confirming booking",
-        });
-      }
     await booking.deleteOne();
 
     res.status(200).json({

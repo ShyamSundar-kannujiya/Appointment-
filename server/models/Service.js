@@ -29,6 +29,16 @@ const serviceSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+
+    advancePaymentEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
+    advanceAmount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

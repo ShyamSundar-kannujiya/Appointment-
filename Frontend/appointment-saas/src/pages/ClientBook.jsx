@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
+import { Copy } from "lucide-react";
 
 const slots = [
   "10:00 AM",
@@ -32,6 +33,9 @@ const ClientBook = () => {
 
   const [loading, setLoading] = useState(false);
 
+  const advanceRequired =
+    selectedService?.advancePaymentEnabled &&
+    Number(selectedService?.advanceAmount || 0) > 0;
 
   useEffect(() => {
     fetchShop();
@@ -41,7 +45,6 @@ const ClientBook = () => {
   const fetchShop = async () => {
     try {
       const res = await api.get(`/shops/${slug}`);
-
       setShop(res.data.shop);
     } catch (error) {
       console.log(error);
@@ -51,7 +54,6 @@ const ClientBook = () => {
   const fetchServices = async () => {
     try {
       const res = await api.get(`/shops/${slug}/services`);
-
       setServices(res.data.services);
     } catch (error) {
       console.log(error);
@@ -102,7 +104,7 @@ const ClientBook = () => {
       setBookingId(res.data.booking._id);
       alert(res.data.message);
 
-      setSelectedService(null);
+      // Booking ke baad payment section ke liye selectedService ko clear mat karo
       setSelectedDate("");
       setSelectedSlot("");
       setName("");
@@ -114,6 +116,10 @@ const ClientBook = () => {
     }
   };
 
+  const copyUpiId = () => {
+    navigator.clipboard.writeText(shop?.upiId || "");
+    alert("UPI ID copied");
+  };
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="bg-slate-900 border-b border-slate-800 p-6">
@@ -131,7 +137,12 @@ const ClientBook = () => {
           {services.map((service) => (
             <div
               key={service._id}
-              onClick={() => setSelectedService(service)}
+              onClick={() => {
+                setSelectedService(service);
+                setBookingId("");
+                setUtrNumber("");
+                setPaymentSubmitted(false);
+              }}
               className={`p-5 rounded-2xl cursor-pointer border transition ${
                 selectedService?._id === service._id
                   ? "border-indigo-500 bg-slate-800"
@@ -149,12 +160,40 @@ const ClientBook = () => {
               <p className="text-slate-400 mt-2">{service.duration} Minutes</p>
 
               <p className="text-green-400 mt-3">₹{service.price}</p>
+
+              {service.advancePaymentEnabled &&
+                Number(service.advanceAmount || 0) > 0 && (
+                  <p className="text-yellow-400 mt-2 text-sm">
+                    Advance Required: ₹{service.advanceAmount}
+                  </p>
+                )}
             </div>
           ))}
         </div>
 
         {selectedService && (
           <>
+            <div className="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <h3 className="text-xl font-semibold">
+                {selectedService.serviceName}
+              </h3>
+
+              <p className="text-slate-300 mt-2">
+                Service Price:{" "}
+                <span className="text-green-400">₹{selectedService.price}</span>
+              </p>
+
+              {advanceRequired ? (
+                <p className="text-yellow-400 mt-2">
+                  Advance Payment: ₹{selectedService.advanceAmount}
+                </p>
+              ) : (
+                <p className="text-slate-400 mt-2">
+                  No advance payment required
+                </p>
+              )}
+            </div>
+
             <h2 className="text-2xl font-semibold mt-10 mb-4">Select Date</h2>
 
             <input
@@ -209,6 +248,18 @@ const ClientBook = () => {
                 className="w-full bg-slate-800 p-3 rounded-xl outline-none"
               />
 
+              {advanceRequired && (
+                <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                  <p className="text-yellow-400 font-semibold">
+                    Advance ₹{selectedService.advanceAmount} required after
+                    booking.
+                  </p>
+                  <p className="text-slate-400 text-sm mt-1">
+                    Booking create hone ke baad UPI payment details dikhengi.
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={handleBooking}
                 disabled={loading}
@@ -220,20 +271,23 @@ const ClientBook = () => {
           </div>
         )}
 
-        {bookingId && shop?.advanceAmount > 0 && (
+        {bookingId && advanceRequired && (
           <div className="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <h2 className="text-xl font-semibold mb-3">Pay Advance</h2>
 
-            <p className="text-slate-300">Amount: ₹{shop.advanceAmount}</p>
+            <p className="text-slate-300">
+              Amount: ₹{selectedService.advanceAmount}
+            </p>
 
             <p className="text-slate-300 mt-2">
-              UPI ID: <span className="text-indigo-400">{shop.upiId}</span>
+              UPI ID: <span className="text-indigo-400">{shop?.upiId}</span>
             </p>
 
             <button
-              onClick={() => navigator.clipboard.writeText(shop.upiId)}
-              className="mt-3 bg-slate-800 px-4 py-2 rounded-lg"
+              onClick={copyUpiId}
+              className="mt-3 flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg"
             >
+              <Copy size={16} />
               Copy UPI ID
             </button>
 
