@@ -26,4 +26,5 @@ router.get("/me", protect, getCurrentUser);
 
 router.put("/profile", protect, updateProfile);
 
+
 export default router;

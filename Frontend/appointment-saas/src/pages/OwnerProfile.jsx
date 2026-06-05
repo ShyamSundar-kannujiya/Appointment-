@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Copy, Save, CheckCircle } from "lucide-react";
 import api from "../services/api";
 import Sidebar from "../components/Sidebar";
@@ -17,6 +17,11 @@ const OwnerProfile = () => {
 
   const [whatsappConfig, setWhatsappConfig] = useState(null);
   const [signupData, setSignupData] = useState({
+    wabaId: "",
+    phoneNumberId: "",
+  });
+
+  const signupDataRef = useRef({
     wabaId: "",
     phoneNumberId: "",
   });
@@ -47,15 +52,16 @@ const OwnerProfile = () => {
         const data =
           typeof event.data === "string" ? JSON.parse(event.data) : event.data;
 
-        if (data?.type === "WA_EMBEDDED_SIGNUP") {
-          if (data.event === "FINISH") {
-            setSignupData({
-              wabaId: data.data?.waba_id || "",
-              phoneNumberId: data.data?.phone_number_id || "",
-            });
+        if (data?.type === "WA_EMBEDDED_SIGNUP" && data.event === "FINISH") {
+          const newData = {
+            wabaId: data.data?.waba_id || "",
+            phoneNumberId: data.data?.phone_number_id || "",
+          };
 
-            console.log("WhatsApp Signup Data:", data.data);
-          }
+          signupDataRef.current = newData;
+          setSignupData(newData);
+
+          console.log("WhatsApp Signup Data:", data.data);
         }
       } catch (error) {
         console.log("WhatsApp message parse error:", error);
@@ -63,7 +69,6 @@ const OwnerProfile = () => {
     };
 
     window.addEventListener("message", handleMessage);
-
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
@@ -148,43 +153,49 @@ const OwnerProfile = () => {
     }
 
     window.FB.login(
-      async (response) => {
-        try {
-          console.log("FB Login Response:", response);
+      (response) => {
+        console.log("FB Login Response:", response);
 
-          const code = response.authResponse?.code;
+        const handleFBResponse = async () => {
+          try {
+            const code = response.authResponse?.code;
 
-          if (!code) {
-            alert("WhatsApp connection cancelled");
-            return;
-          }
-
-          setTimeout(async () => {
-            const wabaId = signupData.wabaId;
-            const phoneNumberId = signupData.phoneNumberId;
-
-            if (!wabaId || !phoneNumberId) {
-              alert("WABA ID or Phone Number ID missing. Check console.");
-              console.log("Signup Data Missing:", signupData);
+            if (!code) {
+              alert("WhatsApp connection cancelled");
               return;
             }
 
-            const res = await api.post("/whatsapp/exchange-code", {
-              code,
-              wabaId,
-              phoneNumberId,
-            });
+            setTimeout(async () => {
+              const { wabaId, phoneNumberId } = signupDataRef.current;
 
-            if (res.data.success) {
-              alert("WhatsApp connected successfully");
-              setWhatsappConnected(true);
-              fetchProfile();
-            }
-          }, 1000);
-        } catch (error) {
-          console.log("WhatsApp connect error:", error);
-          alert(error.response?.data?.message || "WhatsApp connection failed");
-        }
+              if (!wabaId || !phoneNumberId) {
+                alert("WABA ID or Phone Number ID missing. Check console.");
+                console.log("Signup Data Missing:", signupDataRef.current);
+                console.log("Current signupData state:", signupData);
+                return;
+              }
+
+              const res = await api.post("/whatsapp/exchange-code", {
+                code,
+                wabaId,
+                phoneNumberId,
+              });
+
+              if (res.data.success) {
+                alert("WhatsApp connected successfully");
+                setWhatsappConnected(true);
+                fetchProfile();
+              }
+            }, 1500);
+          } catch (error) {
+            console.log("WhatsApp connect error:", error);
+            alert(
+              error.response?.data?.message || "WhatsApp connection failed",
+            );
+          }
+        };
+
+        handleFBResponse();
       },
       {
         config_id: whatsappConfig.configId,
