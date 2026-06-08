@@ -63,3 +63,36 @@ export const exchangeWhatsAppCode = async (req, res) => {
     });
   }
 };
+
+/* ==========================
+   DISCONNECT WHATSAPP
+========================== */     
+export const disconnectWhatsApp = async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user._id, {    
+      whatsappConnected: false,
+      whatsappToken: null,
+      whatsappBusinessAccountId: null,
+      whatsappPhoneNumberId: null,
+    });
+
+    res.json({
+      success: true,
+      message: "WhatsApp disconnected successfully",
+    });
+  } catch (error) {
+    console.log(
+      "WhatsApp Disconnect Error:",
+      error.response?.data || error.message,
+    );  
+
+    res.status(500).json({
+      success: false,
+      message: "WhatsApp disconnection failed",
+      error: error.response?.data || error.message,
+    });
+  }
+};
+
+
+

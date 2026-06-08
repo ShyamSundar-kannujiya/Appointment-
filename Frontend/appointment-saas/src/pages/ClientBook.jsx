@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { Copy } from "lucide-react";
 
@@ -16,6 +16,7 @@ const slots = [
 
 const ClientBook = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const [shop, setShop] = useState(null);
   const [services, setServices] = useState([]);
@@ -54,28 +55,16 @@ const ClientBook = () => {
   const fetchServices = async () => {
     try {
       const res = await api.get(`/shops/${slug}/services`);
-      setServices(res.data.services);
+      setServices(res.data.services || []);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const submitPaymentProof = async () => {
-    try {
-      if (!utrNumber) {
-        return alert("Please enter UTR / Transaction ID");
-      }
-
-      await api.post("/bookings/payment-proof", {
-        bookingId,
-        utrNumber,
-      });
-
-      setPaymentSubmitted(true);
-      alert("Payment proof submitted successfully");
-    } catch (error) {
-      alert(error.response?.data?.message || "Payment proof submit failed");
-    }
+  const resetBookingFlow = () => {
+    setBookingId("");
+    setUtrNumber("");
+    setPaymentSubmitted(false);
   };
 
   const handleBooking = async () => {
@@ -101,14 +90,18 @@ const ClientBook = () => {
         slotTime: selectedSlot,
       });
 
-      setBookingId(res.data.booking._id);
-      alert(res.data.message);
+      const createdBookingId = res.data.booking._id;
 
-      // Booking ke baad payment section ke liye selectedService ko clear mat karo
-      setSelectedDate("");
-      setSelectedSlot("");
-      setName("");
-      setPhone("");
+      setBookingId(createdBookingId);
+
+      if (advanceRequired) {
+        alert(
+          "Booking request created. Please pay advance and submit UTR / Transaction ID.",
+        );
+      } else {
+        alert("Booking request created successfully");
+        navigate(`/track/${createdBookingId}`);
+      }
     } catch (error) {
       alert(error.response?.data?.message || "Booking failed");
     } finally {
@@ -116,10 +109,40 @@ const ClientBook = () => {
     }
   };
 
+  const submitPaymentProof = async () => {
+    try {
+      if (!bookingId) {
+        return alert("Booking ID not found");
+      }
+
+      if (!utrNumber.trim()) {
+        return alert("Please enter UTR / Transaction ID");
+      }
+
+      await api.post("/bookings/payment-proof", {
+        bookingId,
+        utrNumber,
+      });
+
+      setPaymentSubmitted(true);
+
+      alert("Payment proof submitted successfully");
+
+      navigate(`/track/${bookingId}`);
+    } catch (error) {
+      alert(error.response?.data?.message || "Payment proof submit failed");
+    }
+  };
+
   const copyUpiId = () => {
-    navigator.clipboard.writeText(shop?.upiId || "");
+    if (!shop?.upiId) {
+      return alert("UPI ID not available");
+    }
+
+    navigator.clipboard.writeText(shop.upiId);
     alert("UPI ID copied");
   };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="bg-slate-900 border-b border-slate-800 p-6">
@@ -130,7 +153,7 @@ const ClientBook = () => {
         <p className="text-slate-400">Book your appointment</p>
       </div>
 
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 md:p-6">
         <h2 className="text-2xl font-semibold mb-4">Select Service</h2>
 
         <div className="grid md:grid-cols-3 gap-4">
@@ -139,9 +162,11 @@ const ClientBook = () => {
               key={service._id}
               onClick={() => {
                 setSelectedService(service);
-                setBookingId("");
-                setUtrNumber("");
-                setPaymentSubmitted(false);
+                setSelectedDate("");
+                setSelectedSlot("");
+                setName("");
+                setPhone("");
+                resetBookingFlow();
               }}
               className={`p-5 rounded-2xl cursor-pointer border transition ${
                 selectedService?._id === service._id
@@ -194,18 +219,28 @@ const ClientBook = () => {
               )}
             </div>
 
-            <h2 className="text-2xl font-semibold mt-10 mb-4">Select Date</h2>
+            {!bookingId && (
+              <>
+                <h2 className="text-2xl font-semibold mt-10 mb-4">
+                  Select Date
+                </h2>
 
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-slate-900 border border-slate-800 p-3 rounded-xl"
-            />
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setSelectedSlot("");
+                    resetBookingFlow();
+                  }}
+                  className="bg-slate-900 border border-slate-800 p-3 rounded-xl"
+                />
+              </>
+            )}
           </>
         )}
 
-        {selectedDate && (
+        {selectedDate && !bookingId && (
           <>
             <h2 className="text-2xl font-semibold mt-10 mb-4">
               Select Time Slot
@@ -215,7 +250,10 @@ const ClientBook = () => {
               {slots.map((slot) => (
                 <button
                   key={slot}
-                  onClick={() => setSelectedSlot(slot)}
+                  onClick={() => {
+                    setSelectedSlot(slot);
+                    resetBookingFlow();
+                  }}
                   className={`p-3 rounded-xl ${
                     selectedSlot === slot ? "bg-indigo-600" : "bg-slate-900"
                   }`}
@@ -227,7 +265,7 @@ const ClientBook = () => {
           </>
         )}
 
-        {selectedSlot && (
+        {selectedSlot && !bookingId && (
           <div className="mt-10 bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <h2 className="text-2xl font-semibold mb-6">Confirm Booking</h2>
 
@@ -254,6 +292,7 @@ const ClientBook = () => {
                     Advance ₹{selectedService.advanceAmount} required after
                     booking.
                   </p>
+
                   <p className="text-slate-400 text-sm mt-1">
                     Booking create hone ke baad UPI payment details dikhengi.
                   </p>
@@ -263,7 +302,7 @@ const ClientBook = () => {
               <button
                 onClick={handleBooking}
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-xl font-semibold"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-xl font-semibold disabled:opacity-50"
               >
                 {loading ? "Booking..." : "Confirm Appointment"}
               </button>
@@ -272,31 +311,42 @@ const ClientBook = () => {
         )}
 
         {bookingId && advanceRequired && (
-          <div className="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xl font-semibold mb-3">Pay Advance</h2>
+          <div className="mt-10 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 className="text-2xl font-semibold mb-3">Pay Advance</h2>
 
-            <p className="text-slate-300">
-              Amount: ₹{selectedService.advanceAmount}
+            <p className="text-slate-400 mb-5">
+              Your booking request has been created. Please pay advance and
+              submit UTR / Transaction ID to track your booking status.
             </p>
 
-            <p className="text-slate-300 mt-2">
-              UPI ID: <span className="text-indigo-400">{shop?.upiId}</span>
-            </p>
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 mb-5">
+              <p className="text-slate-300">
+                Amount:{" "}
+                <span className="text-yellow-400 font-semibold">
+                  ₹{selectedService.advanceAmount}
+                </span>
+              </p>
 
-            <button
-              onClick={copyUpiId}
-              className="mt-3 flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg"
-            >
-              <Copy size={16} />
-              Copy UPI ID
-            </button>
+              <p className="text-slate-300 mt-2">
+                UPI ID:{" "}
+                <span className="text-indigo-400">{shop?.upiId || "N/A"}</span>
+              </p>
+
+              <button
+                onClick={copyUpiId}
+                className="mt-4 flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg"
+              >
+                <Copy size={16} />
+                Copy UPI ID
+              </button>
+            </div>
 
             <input
               type="text"
               placeholder="Enter UTR / Transaction ID"
               value={utrNumber}
               onChange={(e) => setUtrNumber(e.target.value)}
-              className="w-full mt-4 bg-slate-800 p-3 rounded-xl outline-none"
+              className="w-full bg-slate-800 p-3 rounded-xl outline-none"
             />
 
             <button

@@ -9,6 +9,7 @@ import Customers from "./pages/Customers";
 import Bookings from "./pages/Bookings";
 import OwnerProfile from "./pages/OwnerProfile";
 import UserGuide from "./pages/UserGuide";
+import TrackBooking from "./pages/TrackBooking";
 
 function App() {
   return (
@@ -32,6 +33,8 @@ function App() {
       <Route path="/guide" element={<UserGuide publicMode />} />
 
       <Route path="/user-guide" element={<UserGuide />} />
+
+      <Route path="/track/:id" element={<TrackBooking />} />
     </Routes>
   );
 }

@@ -336,3 +336,27 @@ export const updatePaymentStatus = async (req, res) => {
     });
   }
 };
+
+/* trackbooking */
+export const trackBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id).populate("serviceId");
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      booking,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

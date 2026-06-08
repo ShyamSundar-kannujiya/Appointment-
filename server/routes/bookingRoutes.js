@@ -6,6 +6,7 @@ import {
   updateBookingStatus,
   submitPaymentProof,
   updatePaymentStatus,
+  trackBooking,
 } from "../controllers/bookingController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -19,6 +20,8 @@ router.post("/", createBooking);
 /* Owner */
 
 router.get("/", protect, getBookings);
+
+router.get("/track/:id", trackBooking);
 
 router.put("/:id/status", protect, updateBookingStatus);
 
