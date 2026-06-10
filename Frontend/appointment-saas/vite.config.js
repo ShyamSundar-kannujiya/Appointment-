@@ -1,15 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
 
     VitePWA({
       registerType: "autoUpdate",
       cleanupOutdatedCaches: true,
-      includeAssets: ["favicon.ico"],
+      includeAssets: ["Logo1.svg"],
 
       manifest: {
         name: "AppointmentPro",
@@ -20,7 +22,6 @@ export default defineConfig({
         display: "standalone",
         start_url: "/",
         scope: "/",
-
         icons: [
           {
             src: "/Logo.png",
@@ -36,14 +37,9 @@ export default defineConfig({
             src: "/Logo.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "maskable",
           },
         ],
-      },
-
-      workbox: {
-        navigateFallback: "/index.html",
-        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
       },
     }),
   ],
