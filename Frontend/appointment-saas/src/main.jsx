@@ -5,6 +5,7 @@ import "./index.css";
 
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { registerSW } from "virtual:pwa-register";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -13,3 +14,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </AuthProvider>
   </BrowserRouter>,
 );
+
+registerSW({ immediate: true });
